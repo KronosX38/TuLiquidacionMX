@@ -31,6 +31,9 @@ export default function Step2Datos({ tipoSeparacion, datosIniciales, onBack, onN
   const [fechaSalida, setFechaSalida] = useState(
     datosIniciales.fechaSalida ?? new Date().toISOString().split('T')[0]
   )
+  const [diasTomados, setDiasTomados] = useState<string>(
+    datosIniciales.diasVacacionesTomados?.toString() ?? '0'
+  )
   const [errores, setErrores] = useState<Errores>({})
   const [sdiPreview, setSdiPreview] = useState<number | null>(null)
   const [antiguedadPreview, setAntiguedadPreview] = useState<string | null>(null)
@@ -95,6 +98,7 @@ export default function Step2Datos({ tipoSeparacion, datosIniciales, onBack, onN
       sueldoBrutoMensual: sueldoMensual,
       fechaIngreso,
       fechaSalida,
+      diasVacacionesTomados: parseInt(diasTomados) || 0,
     })
   }
 
@@ -221,6 +225,29 @@ export default function Step2Datos({ tipoSeparacion, datosIniciales, onBack, onN
               </p>
             )}
           </div>
+        </div>
+
+        {/* Vacaciones tomadas */}
+        <div>
+          <label className="label flex items-center">
+            Días de vacaciones ya disfrutados este año
+            <Tooltip content="Si ya tomaste vacaciones en el año en curso, indícalo aquí para descontarlos del cálculo. Si no tomaste ninguno, deja 0." />
+          </label>
+          <div className="relative">
+            <input
+              type="number"
+              min="0"
+              max="30"
+              step="1"
+              placeholder="0"
+              value={diasTomados}
+              onChange={e => setDiasTomados(e.target.value)}
+              className="input-field"
+            />
+          </div>
+          <p className="mt-1 text-xs text-brand-muted">
+            Deja en 0 si no has tomado vacaciones este año
+          </p>
         </div>
 
         {/* Preview SDI */}

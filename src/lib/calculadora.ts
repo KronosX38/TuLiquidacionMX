@@ -111,7 +111,8 @@ function calcularPartesProporcioneales(
   salarioDiario: number,
   fechaIngreso: string,
   fechaSalida: string,
-  aniosExactos: number
+  aniosExactos: number,
+  diasTomados: number = 0
 ): {
   vacaciones: number
   primaVacacional: number
@@ -127,7 +128,8 @@ function calcularPartesProporcioneales(
   // Vacaciones proporcionales
   const aniosCompletos = Math.floor(aniosExactos)
   const diasVacCorresponden = getDiasVacaciones(aniosCompletos + 1)
-  const vacProporcional = (diasEnAnio / 365) * diasVacCorresponden * salarioDiario
+  const diasRestantes = Math.max(0, diasVacCorresponden - diasTomados)
+  const vacProporcional = (diasEnAnio / 365) * diasRestantes * salarioDiario
 
   // Prima vacacional proporcional
   const primaProporcional = vacProporcional * PRIMA_VACACIONAL
@@ -186,7 +188,8 @@ export function calcularLiquidacion(datos: DatosLaborales): ResultadoLiquidacion
     salarioDiario,
     datos.fechaIngreso,
     datos.fechaSalida,
-    aniosExactos
+    aniosExactos,
+    datos.diasVacacionesTomados ?? 0
   )
 
   const conceptos: ConceptoLiquidacion[] = []

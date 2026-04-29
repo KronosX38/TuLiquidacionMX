@@ -6,23 +6,14 @@ export type Periodicidad = 'semanal' | 'quincenal' | 'mensual'
 export interface DatosLaborales {
   tipoSeparacion: TipoSeparacion
   sueldoBrutoMensual: number
+  periodicidad: Periodicidad 
   fechaIngreso: string   // ISO date string YYYY-MM-DD
   fechaSalida: string    // ISO date string YYYY-MM-DD
   // Opcionales para cálculo SDI
+  diasVacacionesTomados?: number
   diasAguinaldo?: number       // default 15
   diasVacaciones?: number      // calculado por ley según antigüedad
   primaVacacional?: number     // default 0.25 (25%)
-}
-
-export interface DatosLaborales {
-  tipoSeparacion: TipoSeparacion
-  periodicidad: Periodicidad        // 👈 agrega esta línea
-  sueldoBrutoMensual: number
-  fechaIngreso: string
-  fechaSalida: string
-  diasAguinaldo?: number
-  diasVacaciones?: number
-  primaVacacional?: number
 }
 
 export interface SDICalculado {
