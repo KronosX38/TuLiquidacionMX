@@ -194,6 +194,17 @@ export function calcularLiquidacion(datos: DatosLaborales): ResultadoLiquidacion
 
   const conceptos: ConceptoLiquidacion[] = []
 
+  // ── Días trabajados sin pagar ──
+  if (datos.diasSinPagar && datos.diasSinPagar > 0) {
+    conceptos.push({
+      nombre: 'Días trabajados sin pagar',
+      descripcion: `${datos.diasSinPagar} día(s) de salario pendiente de pago`,
+      monto: salarioDiario * datos.diasSinPagar,
+      tipo: 'suma',
+      aplicaEn: ['injustificado', 'justificado', 'renuncia'],
+    })
+  }
+
   // ── Partes proporcionales (aplican a TODOS los tipos) ──
   conceptos.push({
     nombre: 'Vacaciones proporcionales',

@@ -34,6 +34,9 @@ export default function Step2Datos({ tipoSeparacion, datosIniciales, onBack, onN
   const [diasTomados, setDiasTomados] = useState<string>(
     datosIniciales.diasVacacionesTomados?.toString() ?? '0'
   )
+  const [diasSinPagar, setDiasSinPagar] = useState<string>(
+    datosIniciales.diasSinPagar?.toString() ?? '0'
+  )
   const [errores, setErrores] = useState<Errores>({})
   const [sdiPreview, setSdiPreview] = useState<number | null>(null)
   const [antiguedadPreview, setAntiguedadPreview] = useState<string | null>(null)
@@ -99,6 +102,7 @@ export default function Step2Datos({ tipoSeparacion, datosIniciales, onBack, onN
       fechaIngreso,
       fechaSalida,
       diasVacacionesTomados: parseInt(diasTomados) || 0,
+      diasSinPagar: parseInt(diasSinPagar) || 0,
     })
   }
 
@@ -247,6 +251,29 @@ export default function Step2Datos({ tipoSeparacion, datosIniciales, onBack, onN
           </div>
           <p className="mt-1 text-xs text-brand-muted">
             Deja en 0 si no has tomado vacaciones este año
+          </p>
+        </div>
+        
+        {/* Días sin pagar */}
+        <div>
+          <label className="label flex items-center">
+            Días trabajados sin cobrar
+            <Tooltip content="Si trabajaste días que aún no te han pagado, indícalos aquí. Por ejemplo: te despiden el miércoles y te pagan los viernes, tienes 3 días sin cobrar." />
+          </label>
+          <div className="relative">
+            <input
+              type="number"
+              min="0"
+              max="31"
+              step="1"
+              placeholder="0"
+              value={diasSinPagar}
+              onChange={e => setDiasSinPagar(e.target.value)}
+              className="input-field"
+            />
+          </div>
+          <p className="mt-1 text-xs text-brand-muted">
+            Deja en 0 si ya te pagaron todos los días trabajados
           </p>
         </div>
 

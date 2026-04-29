@@ -11,6 +11,7 @@ export interface DatosLaborales {
   fechaSalida: string    // ISO date string YYYY-MM-DD
   // Opcionales para cálculo SDI
   diasVacacionesTomados?: number
+  diasSinPagar?: number
   diasAguinaldo?: number       // default 15
   diasVacaciones?: number      // calculado por ley según antigüedad
   primaVacacional?: number     // default 0.25 (25%)
