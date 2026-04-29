@@ -110,8 +110,8 @@ export default function Step3Resultados({ resultado, onNuevoCalculo }: Step3Resu
             </span>
           </div>
 
-          {/* ISR */}
-          {resultado.descuentoISR > 0 && (
+         {/* ISR */}
+          {resultado.tipoSeparacion === 'injustificado' && (
             <div className="concepto-row">
               <div className="flex-1 min-w-0 pr-4 flex items-center gap-1">
                 <p className="text-sm font-medium text-brand-white">Descuento ISR estimado</p>
