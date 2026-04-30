@@ -9,7 +9,7 @@ export interface DatosLaborales {
   periodicidad: Periodicidad 
   fechaIngreso: string   // ISO date string YYYY-MM-DD
   fechaSalida: string    // ISO date string YYYY-MM-DD
-  // Opcionales para cálculo SDI
+  nombreTrabajador?: string
   diasVacacionesTomados?: number
   diasSinPagar?: number
   diasAguinaldo?: number       // default 15

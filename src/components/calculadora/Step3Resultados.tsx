@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import {
   Download, Share2, RotateCcw, ChevronDown, ChevronUp,
-  TrendingUp, TrendingDown, Info, Scale
+  TrendingUp, Info, Scale, Mail
 } from 'lucide-react'
 import type { ResultadoLiquidacion } from '@/types'
 import {
@@ -18,8 +18,8 @@ interface Step3ResultadosProps {
 
 export default function Step3Resultados({ resultado, onNuevoCalculo }: Step3ResultadosProps) {
   const [descargando, setDescargando] = useState(false)
-  const [mostrarSDI, setMostrarSDI]   = useState(false)
-  const [compartido, setCompartido]   = useState(false)
+  const [mostrarSDI, setMostrarSDI] = useState(false)
+  const [compartido, setCompartido] = useState(false)
 
   async function handleDescargarPDF() {
     setDescargando(true)
@@ -33,19 +33,34 @@ export default function Step3Resultados({ resultado, onNuevoCalculo }: Step3Resu
     }
   }
 
-  async function handleCompartir() {
-    const texto = `Mi liquidación laboral calculada con TuLiquidaciónMx:\n` +
-      `Tipo: ${getLabelTipoSeparacion(resultado.tipoSeparacion)}\n` +
-      `Total neto: ${formatCurrency(resultado.totalNeto)}\n` +
-      `Calcula la tuya en: tuliquidacionmx.com`
+  function generarTextoDesglose(): string {
+    const lineas = resultado.conceptos
+      .map(c => `• ${c.nombre}: ${formatCurrency(c.monto)}`)
+      .join('\n')
 
-    if (navigator.share) {
-      await navigator.share({ text: texto, title: 'Mi liquidación laboral' })
-    } else {
-      await navigator.clipboard.writeText(texto)
-      setCompartido(true)
-      setTimeout(() => setCompartido(false), 3000)
-    }
+    return (
+      `🧾 *Mi liquidación laboral - TuLiquidaciónMx*\n\n` +
+      `📋 *Tipo:* ${getLabelTipoSeparacion(resultado.tipoSeparacion)}\n` +
+      `📅 *Antigüedad:* ${resultado.antiguedadAnios} año(s)\n\n` +
+      `*Desglose:*\n${lineas}\n\n` +
+      `Subtotal: ${formatCurrency(resultado.subtotal)}\n` +
+      `ISR estimado: -${formatCurrency(resultado.descuentoISR)}\n` +
+      `✅ *Total neto: ${formatCurrency(resultado.totalNeto)}*\n\n` +
+      `_Calculado en tuliquidacionmx.com_`
+    )
+  }
+
+  function handleWhatsApp() {
+    const texto = generarTextoDesglose()
+    const url = `https://wa.me/?text=${encodeURIComponent(texto)}`
+    window.open(url, '_blank')
+  }
+
+  function handleCorreo() {
+    const texto = generarTextoDesglose()
+    const asunto = encodeURIComponent('Mi liquidación laboral - TuLiquidaciónMx')
+    const cuerpo = encodeURIComponent(texto)
+    window.open(`mailto:?subject=${asunto}&body=${cuerpo}`, '_blank')
   }
 
   const labelTipo = getLabelTipoSeparacion(resultado.tipoSeparacion)
@@ -110,7 +125,7 @@ export default function Step3Resultados({ resultado, onNuevoCalculo }: Step3Resu
             </span>
           </div>
 
-         {/* ISR */}
+          {/* ISR */}
           {resultado.tipoSeparacion === 'injustificado' && (
             <div className="concepto-row">
               <div className="flex-1 min-w-0 pr-4 flex items-center gap-1">
@@ -217,7 +232,7 @@ export default function Step3Resultados({ resultado, onNuevoCalculo }: Step3Resu
       </div>
 
       {/* Acciones */}
-      <div className="grid grid-cols-2 gap-3">
+<div className="grid grid-cols-1 gap-3">
         <button
           type="button"
           onClick={handleDescargarPDF}
@@ -232,14 +247,25 @@ export default function Step3Resultados({ resultado, onNuevoCalculo }: Step3Resu
           {descargando ? 'Generando...' : 'Descargar PDF'}
         </button>
 
-        <button
-          type="button"
-          onClick={handleCompartir}
-          className="btn-secondary flex items-center justify-center gap-2"
-        >
-          <Share2 className="h-4 w-4" />
-          {compartido ? '¡Copiado!' : 'Compartir'}
-        </button>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={handleWhatsApp}
+            className="btn-secondary flex items-center justify-center gap-2"
+          >
+            <Share2 className="h-4 w-4" />
+            WhatsApp
+          </button>
+
+          <button
+            type="button"
+            onClick={handleCorreo}
+            className="btn-secondary flex items-center justify-center gap-2"
+          >
+            <Mail className="h-4 w-4" />
+            Correo
+          </button>
+        </div>
       </div>
 
       <button

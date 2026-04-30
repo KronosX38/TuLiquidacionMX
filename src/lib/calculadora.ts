@@ -15,7 +15,7 @@ import type {
 // ─── CONSTANTES LEGALES ───────────────────────────────────────────────────────
 
 /** Salario Mínimo General vigente 2025 - zona no fronteriza */
-export const SALARIO_MINIMO_GENERAL = 278.80 // pesos/día - actualizar cada año
+export const UMA_DIARIA = 108.57  // UMA 2025 - actualizar cada año
 
 /** Días de aguinaldo mínimo por LFT Art. 87 */
 const DIAS_AGUINALDO = 15
@@ -147,30 +147,69 @@ function calcularPartesProporcioneales(
 // ─── CÁLCULO ISR SOBRE INDEMNIZACIÓN ─────────────────────────────────────────
 // LFT: los primeros 90 SMG de indemnización están exentos de ISR
 
-export function calcularISR(montoIndemnizacion: number, aniosServicio: number): number {
-  if (montoIndemnizacion <= 0) return 0
+export function calcularISR(resultado: {
+  vacaciones: number
+  primaVacacional: number
+  aguinaldo: number
+  indemnizacion: number
+  veinteDias: number
+  primaAntiguedad: number
+  diasSinPagar: number
+  anios: number
+  sueldoMensual: number
+}): number {
+  const SMG = 278.80
 
-  // Exención: 90 veces el SMG por año de servicio
-  const exencionAnual = 90 * SALARIO_MINIMO_GENERAL
-  const exencionTotal = exencionAnual * Math.max(1, aniosServicio)
-  const baseGravable  = Math.max(0, montoIndemnizacion - exencionTotal)
+  // Exenciones por concepto usando UMA (no SMG)
+  const exencionAguinaldo       = Math.min(resultado.aguinaldo, 30 * 278.80)
+  const exencionPrimaVacacional = Math.min(resultado.primaVacacional, 15 * 278.80)
 
-  if (baseGravable <= 0) return 0
+  // Exención indemnización: 90 x UMA x años de servicio
+  const exencionIndemnizacion = 90 * UMA_DIARIA * Math.max(1, resultado.anios)
 
-  // Tabla ISR 2025 simplificada (tasa efectiva estimada sobre base gravable)
-  // Para cálculo exacto se requiere CURP y situación fiscal del trabajador
-  // Usamos tasa marginal estimada conservadora
-  let tasa = 0
-  if      (baseGravable <= 7735.00)   tasa = 0.0192
-  else if (baseGravable <= 65651.07)  tasa = 0.0640
-  else if (baseGravable <= 115375.90) tasa = 0.1088
-  else if (baseGravable <= 134119.41) tasa = 0.1600
-  else if (baseGravable <= 160577.65) tasa = 0.1792
-  else if (baseGravable <= 323862.00) tasa = 0.2136
-  else if (baseGravable <= 510451.00) tasa = 0.2352
-  else                                tasa = 0.3000
+  // Bases gravables
+  const gravableAguinaldo        = Math.max(0, resultado.aguinaldo - exencionAguinaldo)
+  const gravablePrimaVacacional  = Math.max(0, resultado.primaVacacional - exencionPrimaVacacional)
+  const gravableIndemnizacion    = Math.max(0,
+    (resultado.indemnizacion + resultado.veinteDias + resultado.primaAntiguedad) - exencionIndemnizacion
+  )
+  const gravableVacaciones       = resultado.vacaciones
+  const gravableDiasSinPagar     = resultado.diasSinPagar
 
-  return baseGravable * tasa
+  const baseGravableTotal =
+    gravableAguinaldo +
+    gravablePrimaVacacional +
+    gravableIndemnizacion +
+    gravableVacaciones +
+    gravableDiasSinPagar
+
+  if (baseGravableTotal <= 0) return 0
+
+  // Tasa efectiva sobre último sueldo mensual ordinario
+  const tasaEfectiva = calcularTasaEfectiva(resultado.sueldoMensual)
+
+  return baseGravableTotal * tasaEfectiva
+}
+
+function calcularTasaEfectiva(sueldoMensual: number): number {
+  const tablaISR = [
+    { limite:      7735.00, cuotaFija:     0.00, tasa: 0.0192 },
+    { limite:     65651.07, cuotaFija:   148.51, tasa: 0.0640 },
+    { limite:    115375.90, cuotaFija:  3844.28, tasa: 0.1088 },
+    { limite:    134119.41, cuotaFija:  9250.62, tasa: 0.1600 },
+    { limite:    160577.65, cuotaFija: 12209.13, tasa: 0.1792 },
+    { limite:    323862.00, cuotaFija: 16956.84, tasa: 0.2136 },
+    { limite:    510451.00, cuotaFija: 51833.88, tasa: 0.2352 },
+    { limite:    Infinity,  cuotaFija: 95768.74, tasa: 0.3000 },
+  ]
+
+  const renglon = tablaISR.find(r => sueldoMensual <= r.limite)!
+  const limiteAnterior = tablaISR[tablaISR.indexOf(renglon) - 1]?.limite ?? 0
+  const excedente = sueldoMensual - limiteAnterior
+  const isrMensual = renglon.cuotaFija + (excedente * renglon.tasa)
+
+  // Tasa efectiva = ISR mensual / sueldo mensual
+  return isrMensual / sueldoMensual
 }
 
 // ─── MOTOR PRINCIPAL ─────────────────────────────────────────────────────────
@@ -258,7 +297,7 @@ export function calcularLiquidacion(datos: DatosLaborales): ResultadoLiquidacion
     (datos.tipoSeparacion === 'renuncia' && anios >= 15)
 
   if (aplicaPrimaAntiguedad && anios >= 1) {
-    const topeSDI = SALARIO_MINIMO_GENERAL * TOPE_PRIMA_ANTIGUEDAD_FACTOR
+    const topeSDI = 278.80 * TOPE_PRIMA_ANTIGUEDAD_FACTOR
     const sdiFactor = Math.min(salarioDiario, topeSDI)
     const primaAntiguedad = sdiFactor * DIAS_PRIMA_ANTIGUEDAD * Math.max(1, anios)
 
@@ -277,17 +316,21 @@ export function calcularLiquidacion(datos: DatosLaborales): ResultadoLiquidacion
     .reduce((acc, c) => acc + c.monto, 0)
 
   // ── ISR (solo aplica sobre indemnización en despido injustificado) ──
-  let descuentoISR = 0
-  if (datos.tipoSeparacion === 'injustificado') {
-    const montoIndemnizable = conceptos
-      .filter(c =>
-        c.aplicaEn.includes('injustificado') &&
-        (c.nombre.includes('indemnización') || c.nombre.includes('días por año'))
-      )
-      .reduce((acc, c) => acc + c.monto, 0)
+ const getConcepto = (nombre: string) =>
+    conceptos.find(c => c.nombre === nombre)?.monto ?? 0
 
-    descuentoISR = calcularISR(montoIndemnizable, anios)
-  }
+  let descuentoISR = 0
+descuentoISR = calcularISR({
+    vacaciones:      getConcepto('Vacaciones proporcionales'),
+    primaVacacional: getConcepto('Prima vacacional'),
+    aguinaldo:       getConcepto('Aguinaldo proporcional'),
+    indemnizacion:   getConcepto('3 meses de indemnización'),
+    veinteDias:      getConcepto('20 días por año trabajado'),
+    primaAntiguedad: getConcepto('Prima de antigüedad'),
+    diasSinPagar:    getConcepto('Días trabajados sin pagar'),
+    anios,
+    sueldoMensual:   datos.sueldoBrutoMensual,
+  })
 
   return {
     tipoSeparacion:  datos.tipoSeparacion,
@@ -299,7 +342,7 @@ export function calcularLiquidacion(datos: DatosLaborales): ResultadoLiquidacion
     subtotal,
     descuentoISR,
     totalNeto:       subtotal - descuentoISR,
-    salarioMinimo:   SALARIO_MINIMO_GENERAL,
+    salarioMinimo:   278.80,
     fechaCalculo:    new Date().toISOString(),
   }
 }

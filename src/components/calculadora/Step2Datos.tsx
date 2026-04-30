@@ -37,6 +37,9 @@ export default function Step2Datos({ tipoSeparacion, datosIniciales, onBack, onN
   const [diasSinPagar, setDiasSinPagar] = useState<string>(
     datosIniciales.diasSinPagar?.toString() ?? '0'
   )
+  const [nombreTrabajador, setNombreTrabajador] = useState<string>(
+    datosIniciales.nombreTrabajador ?? ''
+  )
   const [errores, setErrores] = useState<Errores>({})
   const [sdiPreview, setSdiPreview] = useState<number | null>(null)
   const [antiguedadPreview, setAntiguedadPreview] = useState<string | null>(null)
@@ -101,6 +104,7 @@ export default function Step2Datos({ tipoSeparacion, datosIniciales, onBack, onN
       sueldoBrutoMensual: sueldoMensual,
       fechaIngreso,
       fechaSalida,
+      nombreTrabajador: nombreTrabajador.trim() || undefined,
       diasVacacionesTomados: parseInt(diasTomados) || 0,
       diasSinPagar: parseInt(diasSinPagar) || 0,
     })
@@ -253,7 +257,26 @@ export default function Step2Datos({ tipoSeparacion, datosIniciales, onBack, onN
             Deja en 0 si no has tomado vacaciones este año
           </p>
         </div>
-        
+
+        {/* Nombre trabajador */}
+        <div>
+          <label className="label flex items-center">
+            Tu nombre completo
+            <Tooltip content="Opcional. Aparecerá en el PDF para identificar el documento. Si no lo ingresas, el PDF se genera sin nombre." />
+          </label>
+          <input
+            type="text"
+            placeholder="Ej: Juan Pérez García (opcional)"
+            value={nombreTrabajador}
+            onChange={e => setNombreTrabajador(e.target.value)}
+            className="input-field"
+            maxLength={80}
+          />
+          <p className="mt-1 text-xs text-brand-muted">
+            Solo se usa para el PDF, no se guarda en ningún servidor
+          </p>
+        </div>
+
         {/* Días sin pagar */}
         <div>
           <label className="label flex items-center">

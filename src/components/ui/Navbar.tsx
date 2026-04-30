@@ -22,7 +22,7 @@ export default function Navbar() {
 
           {/* By Nodeva */}
           <a
-            href="https://nodeva.mx"
+            href="https://nodevaconsultoria.mx"
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-brand-muted hover:text-brand-gold transition-colors"
