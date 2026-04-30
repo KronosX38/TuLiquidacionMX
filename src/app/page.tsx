@@ -56,7 +56,7 @@ export default function HomePage() {
             rel="noopener noreferrer"
             className="text-brand-gold hover:underline"
           >
-            by Nodeva Consultoría Digital
+            by Nodeva Consultoría
           </a>
           {' · '}Mérida, Yucatán, México
         </p>
